@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Redis;
 
 
 class ItemController extends Controller
@@ -26,6 +27,21 @@ class ItemController extends Controller
             $response = Http::get('https://api.weather.com');
             return $response->json();
         });
+    }
+
+    public function getWeatherWithRedis()
+    {
+        $cachedWeather = Redis::get('weather');
+
+        if ($cachedWeather) {
+            return json_decode($cachedWeather);
+        }
+
+        $response = Http::get('https://api.weather.com');
+
+        Redis::setex('weather', 3600, $response->body());
+
+        return $response->json();
     }
 
     public function show($id)
