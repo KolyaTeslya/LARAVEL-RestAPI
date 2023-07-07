@@ -7,6 +7,10 @@ use App\Models\Item;
 use App\Jobs\ProcessItem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+
+
 class ItemController extends Controller
 {
     public function index()
@@ -42,8 +46,13 @@ class ItemController extends Controller
     public function update(Request $request, $id)
     {
         $item = Item::findOrFail($id);
-        $item->update($request->all());
-        return $item;
+
+        if (Gate::allows('update', $item)) {
+            $item->update($request->all());
+            return $item;
+        } else {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
     }
 
     public function destroy($id)
@@ -51,6 +60,19 @@ class ItemController extends Controller
         $item = Item::findOrFail($id);
         $item->delete();
         return response()->json(null, 204);
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('API Token')->accessToken;
+            return response()->json(['token' => $token]);
+        } else {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
     }
 
 
