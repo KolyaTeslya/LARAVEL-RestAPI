@@ -15,7 +15,6 @@ use App\Http\Middleware\LogRequests;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-$logRequestsMiddleware = new \App\Http\Middleware\LogRequests();
 
 Route::get('/', function () {
     return view('welcome');
@@ -26,7 +25,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->middleware($logRequestsMiddleware));
+    $logRequestsMiddleware = new \App\Http\Middleware\LogRequests();
+    Route::get('/items/{id}/edit', 'ItemController@edit')->middleware($logRequestsMiddleware);
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
